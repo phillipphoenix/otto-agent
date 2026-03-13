@@ -92,7 +92,7 @@ The loop continues until the agent signals completion (`%%OTTO_STOP%%`), hits `-
 ## What it looks like
 
 ```
-otto default
+otto run default
 
 ────────────────────────────────────────────────────────────
 Iteration 1                                        ✓ passed

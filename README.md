@@ -10,6 +10,10 @@ Inspired heavily by [ralphify](https://github.com/computerlovetech/ralphify) (al
 # Quickstart
 
 ```bash
+git clone https://github.com/phillipphoelich/otto-agent
+cd otto-agent
+bun install
+
 otto init         # scaffold .otto/ config directory
 otto run          # start the default workflow
 ```
@@ -59,7 +63,8 @@ The prompt is the tuning knob. Change what contexts, instructions, and checks ar
     "maxIterations": 0,
     "delay": 0,
     "timeout": null,
-    "stopOnError": false
+    "stopOnError": false,
+    "logDir": null
   }
 }
 ```
@@ -86,7 +91,7 @@ The loop continues until the agent signals completion (`%%OTTO_STOP%%`), hits `-
 ## What it looks like
 
 ```
-otto default
+otto run default
 
 ────────────────────────────────────────────────────────────
 Iteration 1                                        ✓ passed
@@ -182,6 +187,7 @@ fix those first.
 **Frontmatter options:**
 - `description` — shown by `otto list`
 - `enabled` — set to `false` to hide from `otto list` without deleting
+- `completable` — set to `true` to automatically append stop instructions and enable `%%OTTO_STOP%%` signalling
 
 **Placeholders:**
 - `{{ contexts }}` — all contexts (alphabetical)

@@ -64,7 +64,8 @@ The prompt is the tuning knob. Change what contexts, instructions, and checks ar
     "maxIterations": 0,
     "delay": 0,
     "timeout": null,
-    "stopOnError": false
+    "stopOnError": false,
+    "logDir": null
   }
 }
 ```

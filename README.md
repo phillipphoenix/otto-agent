@@ -5,7 +5,7 @@
 
 ---
 
-Inspired heavily by [ralphify](https://github.com/computerlovetech/ralphify) (almost just a port to Typescript) — Otto Agent wraps [Claude Code](https://docs.anthropic.com/en/docs/claude-code) in a configurable loop with contexts, instructions, and self-healing checks. Each iteration gets a fresh prompt built from your primitives, runs the agent, validates the output, and feeds failures back into the next round.
+Inspired heavily by [ralphify](https://github.com/computerlovetech/ralphify) (almost just a port to Typescript) - Otto Agent wraps [Claude Code](https://docs.anthropic.com/en/docs/claude-code) in a configurable loop with contexts, instructions, and self-healing checks. Each iteration gets a fresh prompt built from your primitives, runs the agent, validates the output, and feeds failures back into the next round.
 
 # Quickstart
 

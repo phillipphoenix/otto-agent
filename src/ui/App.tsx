@@ -4,6 +4,7 @@ import { EventType } from "../events.ts";
 import type { Event, EventEmitter } from "../events.ts";
 import type { RunConfig } from "../run-types.ts";
 import type { AgentLine } from "./AgentOutput.tsx";
+import Banner from "./Banner.tsx";
 import Header from "./Header.tsx";
 import IterationView from "./IterationView.tsx";
 import SummaryView from "./SummaryView.tsx";
@@ -118,6 +119,7 @@ export default function App({ emitter, config }: AppProps) {
 
   return (
     <Box flexDirection="column">
+      <Banner />
       <Header workflow={config.workflow} config={config} />
       {iterations.map((iter, i) => (
         <IterationView

@@ -9,6 +9,7 @@ export function parseFrontmatter(content: string): {
     command: null,
     timeout: null,
     description: null,
+    completable: false,
   };
 
   const trimmed = content.trimStart();
@@ -46,6 +47,9 @@ export function parseFrontmatter(content: string): {
         break;
       case "description":
         frontmatter.description = value || null;
+        break;
+      case "completable":
+        frontmatter.completable = value !== "false";
         break;
     }
   }

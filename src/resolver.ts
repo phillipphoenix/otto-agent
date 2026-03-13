@@ -4,17 +4,22 @@ const STOP_INSTRUCTION = `
 
 ## Completion
 
-When you have fully completed the task described above and no more iterations are needed, end your response with exactly:
+You are running in a loop. Each iteration you will receive this same prompt with fresh context.
+Only signal completion when ALL criteria in the task above are fully satisfied — not after a single unit of work.
+Check whether the task defines a target (e.g. a number of items, a specific end state). If it does, verify that target is met before stopping.
+
+When the entire task is complete, end your response with exactly:
 
 ${STOP_MARKER}
 
-Do NOT include the stop marker if there is still work remaining.`;
+Do NOT include the stop marker if there is ANY work still remaining.`;
 
 export function resolveTemplate(
   template: string,
   contexts: Map<string, string>,
   instructions: Map<string, string>,
   checkFailures?: string,
+  completable?: boolean,
 ): string {
   let result = template;
 
@@ -80,8 +85,10 @@ export function resolveTemplate(
     result = result + "\n\n## Check Failures\n\n" + checkFailures;
   }
 
-  // Append stop instruction
-  result = result + STOP_INSTRUCTION;
+  // Append stop instruction only for completable workflows
+  if (completable) {
+    result = result + STOP_INSTRUCTION;
+  }
 
   return result;
 }

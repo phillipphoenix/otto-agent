@@ -10,6 +10,7 @@ import { resolveTemplate } from "./resolver";
 import { runAgent } from "./agent";
 import { formatDuration } from "./output";
 import { STOP_MARKER } from "./constants";
+import { parseFrontmatter } from "./primitives/frontmatter";
 
 export async function runLoop(
   projectDir: string,
@@ -57,14 +58,15 @@ export async function runLoop(
           "WORKFLOW.md",
         );
         const workflowFile = Bun.file(workflowPath);
-        const template = await workflowFile.text();
+        const rawTemplate = await workflowFile.text();
+        const { frontmatter: workflowFrontmatter, body: template } = parseFrontmatter(rawTemplate);
 
         // Build check failures string from previous iteration
         const checkFailuresText =
           state.checkFailures.length > 0 ? state.checkFailures.join("\n\n") : undefined;
 
         // Resolve template
-        const prompt = resolveTemplate(template, contexts, instructions, checkFailuresText);
+        const prompt = resolveTemplate(template, contexts, instructions, checkFailuresText, workflowFrontmatter.completable);
 
         // Run agent
         const agentResult = await runAgent(
@@ -93,6 +95,9 @@ export async function runLoop(
         // Check if agent signalled completion
         const agentRequestedStop = agentResult.resultText.includes(STOP_MARKER);
 
+        // Strip stop marker from displayed result text
+        const resultText = agentResult.resultText.replaceAll(STOP_MARKER, "").trim();
+
         // Emit ITERATION_COMPLETE
         emitter.emit({
           type: EventType.ITERATION_COMPLETE,
@@ -101,6 +106,7 @@ export async function runLoop(
             iteration: state.iteration,
             status: lastIterationFailed ? "failed" : "succeeded",
             durationMs: agentResult.durationMs,
+            resultText,
           },
         });
 

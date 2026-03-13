@@ -1,0 +1,18 @@
+{
+  "agent": {
+    "command": "claude",
+    "args": [
+      "-p",
+      "--dangerously-skip-permissions"
+    ],
+    "model": "sonnet"
+  },
+  "defaults": {
+    "workflow": "default",
+    "maxIterations": 0,
+    "delay": 0,
+    "timeout": null,
+    "stopOnError": false,
+    "logDir": null
+  }
+}

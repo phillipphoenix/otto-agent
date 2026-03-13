@@ -10,6 +10,11 @@ Inspired heavily by [ralphify](https://github.com/computerlovetech/ralphify) (al
 # Quickstart
 
 ```bash
+git clone https://github.com/phillipphoelich/otto-agent
+cd otto-agent
+bun install
+bun link          # makes `otto` available globally
+
 otto init         # scaffold .otto/ config directory
 otto run          # start the default workflow
 ```

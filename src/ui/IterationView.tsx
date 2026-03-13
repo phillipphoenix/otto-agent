@@ -35,6 +35,13 @@ export default function IterationView({ data, isLast }: IterationViewProps) {
       {/* Agent output */}
       <AgentOutput lines={data.agentLines} />
 
+      {/* Result summary */}
+      {!isRunning && data.resultText && (
+        <Box marginLeft={1}>
+          <Text dimColor>{data.resultText}</Text>
+        </Box>
+      )}
+
       {/* Checks */}
       <ChecksView checks={data.checks} />
 

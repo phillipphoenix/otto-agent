@@ -25,6 +25,7 @@ export interface IterationData {
   status: "running" | "success" | "failed" | "timed_out";
   agentLines: AgentLine[];
   checks: Array<{ name: string; passed: boolean }>;
+  resultText?: string;
 }
 
 function updateLast(
@@ -77,8 +78,9 @@ export default function App({ emitter, config }: AppProps) {
           const result = (event.data.status as string) ?? "success";
           const newStatus: IterationData["status"] =
             result === "timed_out" ? "timed_out" : result === "failed" ? "failed" : "success";
+          const resultText = (event.data.resultText as string) || undefined;
           setIterations((prev) =>
-            updateLast(prev, (cur) => ({ ...cur, status: newStatus })),
+            updateLast(prev, (cur) => ({ ...cur, status: newStatus, resultText })),
           );
           break;
         }

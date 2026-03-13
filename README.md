@@ -188,6 +188,7 @@ fix those first.
 **Frontmatter options:**
 - `description` — shown by `otto list`
 - `enabled` — set to `false` to hide from `otto list` without deleting
+- `completable` — set to `true` to automatically append stop instructions and enable `%%OTTO_STOP%%` signalling
 
 **Placeholders:**
 - `{{ contexts }}` — all contexts (alphabetical)

@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  sync-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract version from tag
+        id: extract
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Update package.json version
+        run: |
+          bun -e "
+            const pkg = await Bun.file('package.json').json();
+            pkg.version = '${{ steps.extract.outputs.version }}';
+            await Bun.write('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore: bump version to ${{ steps.extract.outputs.version }}" || echo "Nothing to commit"
+          git push origin HEAD:main || echo "Nothing to push"
+
+  build:
+    needs: sync-version
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: bun-linux-x64
+            artifact: otto-linux-x64
+          - target: bun-linux-arm64
+            artifact: otto-linux-arm64
+          - target: bun-darwin-x64
+            artifact: otto-darwin-x64
+          - target: bun-darwin-arm64
+            artifact: otto-darwin-arm64
+          - target: bun-windows-x64
+            artifact: otto-windows-x64.exe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - name: Build binary
+        run: |
+          bun build src/cli.ts \
+            --compile \
+            --target=${{ matrix.target }} \
+            --define CURRENT_VERSION='"${{ needs.sync-version.outputs.version }}"' \
+            --outfile ${{ matrix.artifact }}
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.artifact }}

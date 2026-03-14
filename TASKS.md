@@ -6,4 +6,4 @@
 - [x] Create `src/commands/update.ts` implementing the `otto update` subcommand that calls `runUpdate()` via Ink and exits without launching the app shell — file(s): `src/commands/update.ts`
 - [x] Modify `src/commands/run.ts` to start the update check in the background before rendering and show `UpdateNotice` via a second Ink pass after the main app exits — file(s): `src/commands/run.ts`
 - [x] Modify `src/cli.ts` to add the `update` case and update the help text — file(s): `src/cli.ts`
-- [ ] Create `.github/workflows/release.yml` with a `sync-version` job and a `build` matrix job that compiles all 5 platform targets and uploads them to the GitHub Release — file(s): `.github/workflows/release.yml`
+- [x] Create `.github/workflows/release.yml` with a `sync-version` job and a `build` matrix job that compiles all 5 platform targets and uploads them to the GitHub Release — file(s): `.github/workflows/release.yml`

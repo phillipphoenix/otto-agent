@@ -1,6 +1,6 @@
 # Tasks: Make nested workflows report back for better UX and reporting (#13)
 
-- [ ] Add NESTED_WORKFLOW_START, NESTED_WORKFLOW_COMPLETE, NESTED_ITERATION_COMPLETE event types — file(s): `src/events.ts`
+- [x] Add NESTED_WORKFLOW_START, NESTED_WORKFLOW_COMPLETE, NESTED_ITERATION_COMPLETE event types — file(s): `src/events.ts`
 - [ ] Extend RunConfig with reportBack flag and RunState with depth/parentIteration — file(s): `src/run-types.ts`
 - [ ] Add extraEnv to AgentConfig and pass it to the claude subprocess — file(s): `src/agent.ts`
 - [ ] Modify runLoop to accept parentEmitter, emit nested events, manage JSONL relay file for subprocess IPC, and pass child events path to agent — file(s): `src/engine.ts`

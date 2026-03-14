@@ -32,12 +32,6 @@ mock.module("./primitives/checks", () => ({
 mock.module("./resolver", () => ({
   resolveTemplate: mock(() => "test prompt"),
 }));
-mock.module("./primitives/frontmatter", () => ({
-  parseWorkflowFrontmatter: mock(() => ({
-    frontmatter: { completable: false, model: null },
-    body: "test template",
-  })),
-}));
 
 import { runLoop } from "./engine";
 

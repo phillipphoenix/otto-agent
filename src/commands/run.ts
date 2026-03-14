@@ -3,7 +3,7 @@ import { render } from "ink";
 import React from "react";
 import { loadConfig } from "../config";
 import { createEmitter } from "../events";
-import { runLoop } from "../engine";
+import { runLoop, CHILD_EVENTS_ENV_VAR } from "../engine";
 import type { RunConfig } from "../run-types";
 import App from "../ui/App";
 import UpdateNotice from "../ui/UpdateNotice";
@@ -14,6 +14,7 @@ interface RunOptions {
   maxIterations?: number;
   delay?: number;
   stopOnError?: boolean;
+  reportBack?: boolean;
 }
 
 export async function runCommand(
@@ -34,6 +35,10 @@ export async function runCommand(
     process.exit(1);
   }
 
+  // Enable report-back if explicitly requested via CLI flag or if the parent
+  // process has set the child events env var (meaning we are a nested workflow).
+  const reportBack = options.reportBack || !!process.env[CHILD_EVENTS_ENV_VAR];
+
   const runConfig: RunConfig = {
     workflow,
     maxIterations: options.maxIterations ?? config.defaults.maxIterations,
@@ -41,6 +46,7 @@ export async function runCommand(
     timeout: config.defaults.timeout,
     stopOnError: options.stopOnError ?? config.defaults.stopOnError,
     logDir: config.defaults.logDir,
+    reportBack,
   };
 
   const emitter = createEmitter();

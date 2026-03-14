@@ -21,12 +21,20 @@ interface Summary {
   duration: string;
 }
 
+export interface NestedIterationData {
+  workflow: string;
+  iteration: number;
+  status: "success" | "failed";
+  resultText?: string;
+}
+
 export interface IterationData {
   iteration: number;
   status: "running" | "success" | "failed" | "timed_out";
   agentLines: AgentLine[];
   checks: Array<{ name: string; passed: boolean }>;
   resultText?: string;
+  nestedIterations: NestedIterationData[];
 }
 
 function updateLast(
@@ -56,6 +64,7 @@ export default function App({ emitter, config }: AppProps) {
               status: "running",
               agentLines: [],
               checks: [],
+              nestedIterations: [],
             },
           ]);
           break;
@@ -102,6 +111,28 @@ export default function App({ emitter, config }: AppProps) {
               checks: [...cur.checks, { name: (event.data.name as string) ?? "check", passed: false }],
             })),
           );
+          break;
+
+        case EventType.NESTED_ITERATION_COMPLETE: {
+          const nestedIter: NestedIterationData = {
+            workflow: (event.data.workflow as string) ?? "",
+            iteration: (event.data.iteration as number) ?? 1,
+            status: (event.data.status as string) === "failed" ? "failed" : "success",
+            resultText: (event.data.resultText as string) || undefined,
+          };
+          setIterations((prev) =>
+            updateLast(prev, (cur) => ({
+              ...cur,
+              nestedIterations: [...cur.nestedIterations, nestedIter],
+            })),
+          );
+          break;
+        }
+
+        // NESTED_WORKFLOW_START and NESTED_WORKFLOW_COMPLETE are informational only;
+        // the UI derives state from NESTED_ITERATION_COMPLETE events.
+        case EventType.NESTED_WORKFLOW_START:
+        case EventType.NESTED_WORKFLOW_COMPLETE:
           break;
 
         case EventType.RUN_COMPLETE:

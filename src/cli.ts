@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import { initCommand } from "./commands/init";
 import { listCommand } from "./commands/list";
 import { runCommand } from "./commands/run";
+import { updateCommand } from "./commands/update";
 
 function showHelp(): void {
   console.log(`otto — autonomous AI coding agent
@@ -12,6 +13,7 @@ Usage:
   otto run [workflow]   Run a workflow (default if omitted)
   otto init             Scaffold .otto/ directory
   otto list             List available workflows
+  otto update           Update otto to the latest version
 
 Options for 'run':
   -n, --max-iterations <n>   Max iterations (0 = unlimited)
@@ -64,6 +66,10 @@ async function main(): Promise<void> {
       });
       break;
     }
+
+    case "update":
+      await updateCommand();
+      break;
 
     default:
       console.error(`Unknown command: ${command}`);

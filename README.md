@@ -7,13 +7,29 @@
 
 Inspired heavily by [ralphify](https://github.com/computerlovetech/ralphify) (almost just a port to Typescript) - Otto Agent wraps [Claude Code](https://docs.anthropic.com/en/docs/claude-code) in a configurable loop with contexts, instructions, and self-healing checks. Each iteration gets a fresh prompt built from your primitives, runs the agent, validates the output, and feeds failures back into the next round.
 
+# Install
+
+**Linux / macOS:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/phillipphoenix/otto-agent/main/install.sh | sh
+```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/phillipphoenix/otto-agent/main/install.ps1 | iex
+```
+
+You can also set a specific version:
+
+```bash
+VERSION=v1.0.0 curl -fsSL https://raw.githubusercontent.com/phillipphoenix/otto-agent/main/install.sh | sh
+```
+
 # Quickstart
 
 ```bash
-git clone https://github.com/phillipphoelich/otto-agent
-cd otto-agent
-bun install
-
 otto init         # scaffold .otto/ config directory
 otto run          # start the default workflow
 ```

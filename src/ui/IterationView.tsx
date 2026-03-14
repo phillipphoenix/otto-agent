@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Text } from "ink";
 import Spinner from "ink-spinner";
-import type { IterationData } from "./App.tsx";
+import type { IterationData, NestedIterationData } from "./App.tsx";
 import AgentOutput from "./AgentOutput.tsx";
 import ChecksView from "./ChecksView.tsx";
 
@@ -17,6 +17,19 @@ function StatusBadge({ status }: { status: IterationData["status"] }) {
   if (status === "failed") return <Text color="red"> ✗ failed</Text>;
   if (status === "timed_out") return <Text color="red"> ✗ timed out</Text>;
   return null;
+}
+
+function NestedIterationRow({ data }: { data: NestedIterationData }) {
+  const icon = data.status === "success" ? "✓" : "✗";
+  const color = data.status === "success" ? "green" : "red";
+  return (
+    <Box>
+      <Text dimColor>↳ </Text>
+      <Text color={color}>{icon}</Text>
+      <Text dimColor> {data.workflow} #{data.iteration}</Text>
+      {data.resultText && <Text dimColor> — {data.resultText}</Text>}
+    </Box>
+  );
 }
 
 export default function IterationView({ data, isLast }: IterationViewProps) {
@@ -39,6 +52,15 @@ export default function IterationView({ data, isLast }: IterationViewProps) {
       {!isRunning && data.resultText && (
         <Box marginLeft={1}>
           <Text dimColor>{data.resultText}</Text>
+        </Box>
+      )}
+
+      {/* Nested iterations */}
+      {data.nestedIterations.length > 0 && (
+        <Box flexDirection="column" marginLeft={2} marginTop={0}>
+          {data.nestedIterations.map((nested, i) => (
+            <NestedIterationRow key={i} data={nested} />
+          ))}
         </Box>
       )}
 

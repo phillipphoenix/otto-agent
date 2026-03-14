@@ -7,4 +7,4 @@
 - [x] Add --report-back CLI option and wire up OTTO_CHILD_EVENTS_PATH detection for inner workflow — file(s): `src/commands/run.ts`
 - [x] Extend IterationData with nestedIterations and handle new event types in App — file(s): `src/ui/App.tsx`
 - [x] Render nested iterations indented in IterationView — file(s): `src/ui/IterationView.tsx`
-- [ ] Write unit tests for nested runLoop with parentEmitter (with and without reportBack flag) — file(s): `src/engine.test.ts`
+- [x] Write unit tests for nested runLoop with parentEmitter (with and without reportBack flag) — file(s): `src/engine.test.ts`

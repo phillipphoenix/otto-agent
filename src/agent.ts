@@ -5,6 +5,7 @@ export interface AgentConfig {
   args: string[];
   model?: string;
   timeout?: number | null;
+  extraEnv?: Record<string, string>;
 }
 
 export interface AgentResult {
@@ -57,6 +58,7 @@ export async function runAgent(
     stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
+    env: config.extraEnv ? { ...process.env, ...config.extraEnv } : undefined,
   });
 
   proc.stdin.write(prompt);

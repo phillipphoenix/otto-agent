@@ -1,6 +1,6 @@
 # Tasks: Auto-update, build pipeline & distribution for Otto CLI (#11)
 
-- [ ] Create `src/version.ts` with `CURRENT_VERSION` constant (defaulting to `"0.0.0"` for dev, overridden by `--define` at build time) — file(s): `src/version.ts`
+- [x] Create `src/version.ts` with `CURRENT_VERSION` constant (defaulting to `"0.0.0"` for dev, overridden by `--define` at build time) — file(s): `src/version.ts`
 - [ ] Create `src/updater.ts` with `fetchLatestVersion()`, `downloadAndApply()`, and `runUpdate()` functions; include Windows `.cmd` shim logic for locked-binary swap — file(s): `src/updater.ts`
 - [ ] Create `src/ui/UpdateNotice.tsx` Ink component that renders a post-run update notice with version diff and auto-dismisses after 10 seconds — file(s): `src/ui/UpdateNotice.tsx`
 - [ ] Create `src/commands/update.ts` implementing the `otto update` subcommand that calls `runUpdate()` via Ink and exits without launching the app shell — file(s): `src/commands/update.ts`

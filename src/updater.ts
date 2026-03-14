@@ -6,8 +6,8 @@ const RELEASES_API = `https://api.github.com/repos/${GITHUB_REPO}/releases/lates
 /** Compares two semver strings. Returns true if b is newer than a. */
 function isNewer(a: string, b: string): boolean {
   const parse = (v: string) => v.replace(/^v/, "").split(".").map(Number);
-  const [aMaj, aMin, aPatch] = parse(a);
-  const [bMaj, bMin, bPatch] = parse(b);
+  const [aMaj = 0, aMin = 0, aPatch = 0] = parse(a);
+  const [bMaj = 0, bMin = 0, bPatch = 0] = parse(b);
   if (bMaj !== aMaj) return bMaj > aMaj;
   if (bMin !== aMin) return bMin > aMin;
   return bPatch > aPatch;

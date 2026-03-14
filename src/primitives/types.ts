@@ -12,6 +12,10 @@ export interface PrimitiveFrontmatter {
   completable: boolean;
 }
 
+export interface WorkflowFrontmatter extends PrimitiveFrontmatter {
+  model: string | null;
+}
+
 export interface PrimitiveEntry {
   name: string;
   type: PrimitiveType;

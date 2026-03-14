@@ -10,7 +10,7 @@ import { resolveTemplate } from "./resolver";
 import { runAgent } from "./agent";
 import { formatDuration } from "./output";
 import { STOP_MARKER } from "./constants";
-import { parseFrontmatter } from "./primitives/frontmatter";
+import { parseWorkflowFrontmatter } from "./primitives/frontmatter";
 
 export async function runLoop(
   projectDir: string,
@@ -59,7 +59,7 @@ export async function runLoop(
         );
         const workflowFile = Bun.file(workflowPath);
         const rawTemplate = await workflowFile.text();
-        const { frontmatter: workflowFrontmatter, body: template } = parseFrontmatter(rawTemplate);
+        const { frontmatter: workflowFrontmatter, body: template } = parseWorkflowFrontmatter(rawTemplate);
 
         // Build check failures string from previous iteration
         const checkFailuresText =
@@ -73,7 +73,7 @@ export async function runLoop(
           {
             command: config.agent.command,
             args: config.agent.args,
-            model: config.agent.model,
+            model: workflowFrontmatter.model ?? config.agent.model,
             timeout: runConfig.timeout,
           },
           prompt,

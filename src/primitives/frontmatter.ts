@@ -1,4 +1,4 @@
-import type { PrimitiveFrontmatter } from "./types";
+import type { PrimitiveFrontmatter, WorkflowFrontmatter } from "./types";
 
 export function parseFrontmatter(content: string): {
   frontmatter: PrimitiveFrontmatter;
@@ -55,6 +55,40 @@ export function parseFrontmatter(content: string): {
   }
 
   return { frontmatter, body: stripComments(body) };
+}
+
+export function parseWorkflowFrontmatter(content: string): {
+  frontmatter: WorkflowFrontmatter;
+  body: string;
+} {
+  const { frontmatter: base, body } = parseFrontmatter(content);
+  const workflowDefaults: WorkflowFrontmatter = { ...base, model: null };
+
+  const trimmed = content.trimStart();
+  if (!trimmed.startsWith("---")) {
+    return { frontmatter: workflowDefaults, body };
+  }
+  const endIndex = trimmed.indexOf("\n---", 3);
+  if (endIndex === -1) {
+    return { frontmatter: workflowDefaults, body };
+  }
+
+  const frontmatterBlock = trimmed.slice(4, endIndex);
+  const frontmatter = { ...workflowDefaults };
+
+  for (const line of frontmatterBlock.split("\n")) {
+    const colonIndex = line.indexOf(":");
+    if (colonIndex === -1) continue;
+
+    const key = line.slice(0, colonIndex).trim();
+    const value = line.slice(colonIndex + 1).trim();
+
+    if (key === "model") {
+      frontmatter.model = value || null;
+    }
+  }
+
+  return { frontmatter, body };
 }
 
 function stripComments(text: string): string {

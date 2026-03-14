@@ -1,5 +1,5 @@
 import { test, expect, describe } from "bun:test";
-import { parseFrontmatter } from "./frontmatter";
+import { parseFrontmatter, parseWorkflowFrontmatter } from "./frontmatter";
 
 describe("parseFrontmatter", () => {
   test("parses valid frontmatter with all fields populated", () => {
@@ -44,5 +44,61 @@ Body here
     expect(frontmatter.description).toBeNull();
     expect(frontmatter.completable).toBe(false);
     expect(body).toBe("Just plain content with no frontmatter.");
+  });
+
+  test("does not have a model field", () => {
+    const content = `---
+model: opus
+---
+Body here
+`;
+    const { frontmatter } = parseFrontmatter(content);
+    expect((frontmatter as any).model).toBeUndefined();
+  });
+});
+
+describe("parseWorkflowFrontmatter", () => {
+  test("parses model field from frontmatter", () => {
+    const content = `---
+model: opus
+completable: true
+---
+# Workflow body
+`;
+    const { frontmatter, body } = parseWorkflowFrontmatter(content);
+    expect(frontmatter.model).toBe("opus");
+    expect(frontmatter.completable).toBe(true);
+    expect(body).toContain("# Workflow body");
+  });
+
+  test("returns null model when model is not specified", () => {
+    const content = `---
+completable: true
+---
+# Workflow body
+`;
+    const { frontmatter } = parseWorkflowFrontmatter(content);
+    expect(frontmatter.model).toBeNull();
+  });
+
+  test("returns null model when there is no frontmatter block", () => {
+    const content = "Just plain workflow content.";
+    const { frontmatter, body } = parseWorkflowFrontmatter(content);
+    expect(frontmatter.model).toBeNull();
+    expect(body).toBe("Just plain workflow content.");
+  });
+
+  test("inherits base frontmatter fields alongside model", () => {
+    const content = `---
+enabled: false
+model: haiku
+timeout: 60
+---
+Body
+`;
+    const { frontmatter } = parseWorkflowFrontmatter(content);
+    expect(frontmatter.enabled).toBe(false);
+    expect(frontmatter.model).toBe("haiku");
+    expect(frontmatter.timeout).toBe(60);
   });
 });

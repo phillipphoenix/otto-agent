@@ -288,6 +288,17 @@ export async function runLoop(
           },
         });
 
+        // Report error iteration to parent
+        if (childEventsTarget) {
+          await appendNestedEvent(childEventsTarget, EventType.NESTED_ITERATION_COMPLETE, {
+            workflow: runConfig.workflow,
+            iteration: state.iteration,
+            status: "failed",
+            depth: state.depth,
+            instanceId,
+          });
+        }
+
         if (runConfig.stopOnError) break;
       }
     }

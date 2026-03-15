@@ -204,6 +204,7 @@ fix those first.
 - `description` — shown by `otto list`
 - `enabled` — set to `false` to hide from `otto list` without deleting
 - `completable` — set to `true` to automatically append stop instructions and enable `%%OTTO_STOP%%` signalling
+- `model` — override the model for this workflow (e.g. `opus`, `haiku`); falls back to `otto.json` agent config
 
 **Placeholders:**
 - `{{ contexts }}` — all contexts (alphabetical)

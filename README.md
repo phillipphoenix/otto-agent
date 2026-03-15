@@ -251,6 +251,18 @@ Update otto to the latest version.
 bun install
 ```
 
+## Run locally
+
+```bash
+bun run otto <command>   # e.g. bun run otto run
+```
+
+## Test
+
+```bash
+bun test
+```
+
 # License
 
 MIT

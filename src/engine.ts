@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { appendFile, rm, mkdtemp, readdir } from "node:fs/promises";
+import { watch, type FSWatcher } from "node:fs";
 import { tmpdir } from "node:os";
 import { type EventEmitter, EventType } from "./events";
 import type { OttoConfig } from "./config";
@@ -20,8 +21,8 @@ export const CHILD_EVENTS_ENV_VAR = "OTTO_CHILD_EVENTS_PATH";
 /** Env var tracking nesting depth. */
 export const DEPTH_ENV_VAR = "OTTO_DEPTH";
 
-/** How often to poll the relay directory for new events written by child processes (ms). */
-const RELAY_POLL_INTERVAL_MS = 300;
+/** Safety-net fallback poll interval for the relay directory (ms). */
+const RELAY_FALLBACK_POLL_MS = 2000;
 
 async function appendNestedEvent(
   filePath: string,
@@ -30,6 +31,40 @@ async function appendNestedEvent(
 ): Promise<void> {
   const event = { type, timestamp: Date.now(), data };
   await appendFile(filePath, JSON.stringify(event) + "\n");
+}
+
+/** Read new content from relay .jsonl files and emit parsed events. */
+export async function processRelayFiles(
+  relayDir: string,
+  filePositions: Map<string, number>,
+  emitter: EventEmitter,
+): Promise<void> {
+  try {
+    const files = await readdir(relayDir);
+    for (const file of files) {
+      if (!file.endsWith(".jsonl")) continue;
+      const filePath = join(relayDir, file);
+      const pos = filePositions.get(filePath) ?? 0;
+      try {
+        const newContent = await Bun.file(filePath).slice(pos).text();
+        if (newContent.length > 0) {
+          filePositions.set(filePath, pos + newContent.length);
+          for (const line of newContent.split("\n")) {
+            if (!line.trim()) continue;
+            try {
+              emitter.emit(JSON.parse(line));
+            } catch {
+              // skip malformed lines
+            }
+          }
+        }
+      } catch {
+        // file may be temporarily unavailable
+      }
+    }
+  } catch {
+    // relay dir may be temporarily unavailable
+  }
 }
 
 /** Generate a short 5-char random ID. */
@@ -71,41 +106,24 @@ export async function runLoop(
     ownsRelayDir = false;
   }
 
-  // Background watcher: only top-level polls the relay directory
+  // Background watcher: only top-level watches the relay directory
   let stopRelay = false;
   const filePositions = new Map<string, number>();
+  let relayWatcher: FSWatcher | undefined;
 
+  if (isTopLevel) {
+    // fs.watch triggers processRelayFiles on any change in the relay dir
+    relayWatcher = watch(relayDir, async () => {
+      await processRelayFiles(relayDir, filePositions, emitter);
+    });
+  }
+
+  // Fallback poll loop — catches any events missed by fs.watch
   const relayPromise = isTopLevel
     ? (async () => {
         while (!stopRelay) {
-          await Bun.sleep(RELAY_POLL_INTERVAL_MS);
-          try {
-            const files = await readdir(relayDir);
-            for (const file of files) {
-              if (!file.endsWith(".jsonl")) continue;
-              const filePath = join(relayDir, file);
-              const pos = filePositions.get(filePath) ?? 0;
-              try {
-                const content = await Bun.file(filePath).text();
-                if (content.length > pos) {
-                  const newContent = content.slice(pos);
-                  filePositions.set(filePath, content.length);
-                  for (const line of newContent.split("\n")) {
-                    if (!line.trim()) continue;
-                    try {
-                      emitter.emit(JSON.parse(line));
-                    } catch {
-                      // skip malformed lines
-                    }
-                  }
-                }
-              } catch {
-                // file may be temporarily unavailable
-              }
-            }
-          } catch {
-            // relay dir may be temporarily unavailable
-          }
+          await Bun.sleep(RELAY_FALLBACK_POLL_MS);
+          await processRelayFiles(relayDir, filePositions, emitter);
         }
       })()
     : Promise.resolve();
@@ -275,6 +293,7 @@ export async function runLoop(
     }
   } finally {
     // Stop relay watcher and clean up
+    relayWatcher?.close();
     stopRelay = true;
     await relayPromise;
     if (ownsRelayDir) {

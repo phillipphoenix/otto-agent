@@ -33,7 +33,7 @@ mock.module("./resolver", () => ({
   resolveTemplate: mock(() => "test prompt"),
 }));
 
-import { runLoop, CHILD_EVENTS_ENV_VAR, DEPTH_ENV_VAR } from "./engine";
+import { runLoop, processRelayFiles, CHILD_EVENTS_ENV_VAR, DEPTH_ENV_VAR } from "./engine";
 
 const WORKFLOW_NAME = "test-workflow";
 
@@ -301,5 +301,60 @@ describe("runLoop nested events via relay directory", () => {
     expect(capturedEnv).toBeDefined();
     expect(capturedEnv![CHILD_EVENTS_ENV_VAR]).toBeDefined();
     expect(capturedEnv![DEPTH_ENV_VAR]).toBe("0"); // top-level depth
+  });
+});
+
+describe("processRelayFiles", () => {
+  test("reads .jsonl files and emits parsed events", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "otto-relay-prf-"));
+    try {
+      const event1 = { type: EventType.NESTED_WORKFLOW_START, timestamp: 1, data: { workflow: "w1" } };
+      const event2 = { type: EventType.NESTED_ITERATION_COMPLETE, timestamp: 2, data: { iteration: 1 } };
+      await Bun.write(join(dir, "child.jsonl"), JSON.stringify(event1) + "\n" + JSON.stringify(event2) + "\n");
+
+      const emitter = createEmitter();
+      const events: Event[] = [];
+      emitter.subscribe((e) => events.push(e));
+
+      const positions = new Map<string, number>();
+      await processRelayFiles(dir, positions, emitter);
+
+      expect(events).toHaveLength(2);
+      expect(events[0].type).toBe(EventType.NESTED_WORKFLOW_START);
+      expect(events[1].type).toBe(EventType.NESTED_ITERATION_COMPLETE);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("tracks file positions and only reads new content on subsequent calls", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "otto-relay-prf-"));
+    try {
+      const event1 = { type: EventType.NESTED_WORKFLOW_START, timestamp: 1, data: { workflow: "w1" } };
+      await Bun.write(join(dir, "child.jsonl"), JSON.stringify(event1) + "\n");
+
+      const emitter = createEmitter();
+      const events: Event[] = [];
+      emitter.subscribe((e) => events.push(e));
+
+      const positions = new Map<string, number>();
+
+      // First call reads event1
+      await processRelayFiles(dir, positions, emitter);
+      expect(events).toHaveLength(1);
+
+      // Append a second event
+      const event2 = { type: EventType.NESTED_WORKFLOW_COMPLETE, timestamp: 2, data: { workflow: "w1" } };
+      const filePath = join(dir, "child.jsonl");
+      const existing = await Bun.file(filePath).text();
+      await Bun.write(filePath, existing + JSON.stringify(event2) + "\n");
+
+      // Second call only reads event2, not event1 again
+      await processRelayFiles(dir, positions, emitter);
+      expect(events).toHaveLength(2);
+      expect(events[1].type).toBe(EventType.NESTED_WORKFLOW_COMPLETE);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

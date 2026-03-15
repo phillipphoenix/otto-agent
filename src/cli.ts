@@ -19,6 +19,8 @@ Options for 'run':
   -n, --max-iterations <n>   Max iterations (0 = unlimited)
   --delay <seconds>          Delay between iterations
   --stop-on-error            Stop on non-zero agent exit
+  --report-back              Relay iteration events to parent otto process
+                             (auto-enabled when OTTO_CHILD_EVENTS_PATH is set)
 `);
 }
 
@@ -29,6 +31,7 @@ async function main(): Promise<void> {
       "max-iterations": { type: "string", short: "n" },
       delay: { type: "string" },
       "stop-on-error": { type: "boolean", default: false },
+      "report-back": { type: "boolean", default: false },
       help: { type: "boolean", short: "h" },
     },
     allowPositionals: true,
@@ -63,6 +66,7 @@ async function main(): Promise<void> {
         maxIterations,
         delay,
         stopOnError: values["stop-on-error"],
+        reportBack: values["report-back"],
       });
       break;
     }

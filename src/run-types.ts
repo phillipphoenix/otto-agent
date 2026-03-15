@@ -15,6 +15,7 @@ export interface RunConfig {
   timeout: number | null;
   stopOnError: boolean;
   logDir: string | null;
+  reportBack?: boolean;
 }
 
 export class RunState {
@@ -24,6 +25,7 @@ export class RunState {
   failed: number = 0;
   checkFailures: string[] = [];
   startTime: number = Date.now();
+  depth: number = 0;
 
   private stopRequested: boolean = false;
   private emitter: EventEmitter | null;

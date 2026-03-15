@@ -7,6 +7,9 @@ export enum EventType {
   CHECK_FAILED = "check_failed",
   LOG_MESSAGE = "log_message",
   RUN_COMPLETE = "run_complete",
+  NESTED_WORKFLOW_START = "nested_workflow_start",
+  NESTED_ITERATION_COMPLETE = "nested_iteration_complete",
+  NESTED_WORKFLOW_COMPLETE = "nested_workflow_complete",
 }
 
 export interface Event {

@@ -85,6 +85,8 @@ The prompt is the tuning knob. Change what contexts, instructions, and checks ar
 }
 ```
 
+`defaults.timeout` — per-iteration agent timeout in **milliseconds** (`null` = no timeout). `defaults.delay` — seconds to wait between iterations.
+
 ## What `otto run` does
 
 ```

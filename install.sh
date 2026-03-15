@@ -56,3 +56,19 @@ case ":$PATH:" in
 esac
 
 echo "Installed otto $VERSION to $INSTALL_DIR/otto"
+
+echo ""
+echo " ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓"
+echo " ▓▓  ▓▓    ▓▓      ▓▓    ▓▓  ▓▓"
+echo " ▓▓  ▓▓    ▓▓      ▓▓    ▓▓  ▓▓"
+echo " ▓▓  ▓▓    ▓▓      ▓▓    ▓▓  ▓▓"
+echo " ▓▓▓▓▓▓    ▓▓      ▓▓    ▓▓▓▓▓▓"
+echo ""
+echo "Otto — your autonomous coding agent."
+echo "So happy to have you on board — let's build something amazing together!"
+echo ""
+echo "  otto --help               Show all available commands"
+echo "  otto run                  Run the default workflow"
+echo "  otto run <workflow>       Run a specific workflow"
+echo ""
+echo "Learn more: https://github.com/phillipphoenix/otto-agent"

@@ -39,3 +39,19 @@ if ($UserPath -notlike "*$InstallDir*") {
 }
 
 Write-Host "Installed otto $Version to $OutFile"
+
+Write-Host ""
+Write-Host " ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓  ▓▓▓▓▓▓"
+Write-Host " ▓▓  ▓▓    ▓▓      ▓▓    ▓▓  ▓▓"
+Write-Host " ▓▓  ▓▓    ▓▓      ▓▓    ▓▓  ▓▓"
+Write-Host " ▓▓  ▓▓    ▓▓      ▓▓    ▓▓  ▓▓"
+Write-Host " ▓▓▓▓▓▓    ▓▓      ▓▓    ▓▓▓▓▓▓"
+Write-Host ""
+Write-Host "Otto -- your autonomous coding agent."
+Write-Host "So happy to have you on board -- let's build something amazing together!"
+Write-Host ""
+Write-Host "  otto --help               Show all available commands"
+Write-Host "  otto run                  Run the default workflow"
+Write-Host "  otto run <workflow>       Run a specific workflow"
+Write-Host ""
+Write-Host "Learn more: https://github.com/phillipphoenix/otto-agent"

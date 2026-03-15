@@ -87,9 +87,7 @@ export default function App({ emitter, config }: AppProps) {
         }
 
         case EventType.ITERATION_COMPLETE: {
-          const result = (event.data.status as string) ?? "success";
-          const newStatus: IterationData["status"] =
-            result === "timed_out" ? "timed_out" : result === "failed" ? "failed" : "success";
+          const newStatus = ((event.data.status as string) ?? "success") as IterationData["status"];
           const resultText = (event.data.resultText as string) || undefined;
           setIterations((prev) =>
             updateLast(prev, (cur) => ({ ...cur, status: newStatus, resultText })),
@@ -119,7 +117,7 @@ export default function App({ emitter, config }: AppProps) {
           const nestedIter: NestedIterationData = {
             workflow: (event.data.workflow as string) ?? "",
             iteration: (event.data.iteration as number) ?? 1,
-            status: (event.data.status as string) === "failed" ? "failed" : "success",
+            status: ((event.data.status as string) ?? "success") as NestedIterationData["status"],
             resultText: (event.data.resultText as string) || undefined,
             depth: (event.data.depth as number) ?? 1,
             instanceId: (event.data.instanceId as string) ?? "",

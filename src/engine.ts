@@ -224,7 +224,7 @@ export async function runLoop(
           timestamp: Date.now(),
           data: {
             iteration: state.iteration,
-            status: lastIterationFailed ? "failed" : "succeeded",
+            status: lastIterationFailed ? "failed" : "success",
             durationMs: agentResult.durationMs,
             resultText,
           },
@@ -235,7 +235,7 @@ export async function runLoop(
           await appendNestedEvent(childEventsTarget, EventType.NESTED_ITERATION_COMPLETE, {
             workflow: runConfig.workflow,
             iteration: state.iteration,
-            status: lastIterationFailed ? "failed" : "succeeded",
+            status: lastIterationFailed ? "failed" : "success",
             durationMs: agentResult.durationMs,
             resultText,
             depth: state.depth,

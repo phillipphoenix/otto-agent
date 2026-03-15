@@ -161,7 +161,7 @@ description: Coding standards
 
 ### Checks
 
-Post-iteration validation. Must have a `command`. Exit 0 = pass, nonzero = fail. Failures are collected and injected into the next iteration's prompt so the agent can self-heal.
+Post-iteration validation. Must have a `command`. Exit 0 = pass, nonzero = fail. Failures are collected and injected into the next iteration's prompt so the agent can self-heal. `timeout` is in seconds.
 
 ```markdown
 ---

@@ -26,6 +26,8 @@ export interface NestedIterationData {
   iteration: number;
   status: "success" | "failed";
   resultText?: string;
+  depth: number;
+  instanceId: string;
 }
 
 export interface IterationData {
@@ -119,6 +121,8 @@ export default function App({ emitter, config }: AppProps) {
             iteration: (event.data.iteration as number) ?? 1,
             status: (event.data.status as string) === "failed" ? "failed" : "success",
             resultText: (event.data.resultText as string) || undefined,
+            depth: (event.data.depth as number) ?? 1,
+            instanceId: (event.data.instanceId as string) ?? "",
           };
           setIterations((prev) =>
             updateLast(prev, (cur) => ({

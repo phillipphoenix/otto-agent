@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { appendFile, unlink } from "node:fs/promises";
+import { appendFile, rm, mkdtemp, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { type EventEmitter, EventType } from "./events";
 import type { OttoConfig } from "./config";
@@ -14,10 +14,13 @@ import { formatDuration } from "./output";
 import { STOP_MARKER } from "./constants";
 import { parseWorkflowFrontmatter } from "./primitives/frontmatter";
 
-/** Env var used to pass the parent's JSONL relay file path to child otto processes. */
+/** Env var used to pass the shared relay directory path to child otto processes. */
 export const CHILD_EVENTS_ENV_VAR = "OTTO_CHILD_EVENTS_PATH";
 
-/** How often to poll the JSONL relay file for new events written by child processes (ms). */
+/** Env var tracking nesting depth. */
+export const DEPTH_ENV_VAR = "OTTO_DEPTH";
+
+/** How often to poll the relay directory for new events written by child processes (ms). */
 const RELAY_POLL_INTERVAL_MS = 300;
 
 async function appendNestedEvent(
@@ -29,63 +32,90 @@ async function appendNestedEvent(
   await appendFile(filePath, JSON.stringify(event) + "\n");
 }
 
+/** Generate a short 5-char random ID. */
+function shortId(): string {
+  return crypto.randomUUID().slice(0, 5);
+}
+
 export async function runLoop(
   projectDir: string,
   config: OttoConfig,
   runConfig: RunConfig,
   emitter: EventEmitter,
-  parentEmitter?: EventEmitter,
 ): Promise<void> {
   const state = new RunState(emitter);
-  state.depth = parentEmitter || process.env[CHILD_EVENTS_ENV_VAR] ? 1 : 0;
+
+  // Determine nesting depth and whether we are the top-level process
+  const parentRelayDir = process.env[CHILD_EVENTS_ENV_VAR];
+  const isTopLevel = !parentRelayDir;
+  state.depth = isTopLevel ? 0 : Number(process.env[DEPTH_ENV_VAR] || "0") + 1;
   state.setStatus(RunStatus.RUNNING);
 
-  // Same-process nested path: emit directly to parent emitter
-  const emitToParent = !!(parentEmitter && runConfig.reportBack);
+  // Instance ID for this workflow run (used in event data and relay file naming)
+  const instanceId = shortId();
 
-  // Subprocess nested path: append events to parent's relay file
-  const childEventsTarget = runConfig.reportBack ? process.env[CHILD_EVENTS_ENV_VAR] : undefined;
+  // Subprocess nested path: append events to own file inside parent's relay dir
+  const childEventsTarget =
+    runConfig.reportBack && parentRelayDir
+      ? join(parentRelayDir, `${runConfig.workflow}-${instanceId}.jsonl`)
+      : undefined;
 
-  // Create our own relay file for child otto processes spawned via agent bash calls
-  const ownRelayPath = join(tmpdir(), `otto-events-${crypto.randomUUID()}.jsonl`);
-  await Bun.write(ownRelayPath, "");
+  // Shared relay directory: top-level creates it, nested processes reuse parent's dir
+  let relayDir: string;
+  let ownsRelayDir: boolean;
+  if (isTopLevel) {
+    relayDir = await mkdtemp(join(tmpdir(), "otto-relay-"));
+    ownsRelayDir = true;
+  } else {
+    relayDir = parentRelayDir!;
+    ownsRelayDir = false;
+  }
 
-  // Background watcher: poll relay file and re-emit child events on our emitter
+  // Background watcher: only top-level polls the relay directory
   let stopRelay = false;
-  let relayPosition = 0;
-  const relayPromise = (async () => {
-    while (!stopRelay) {
-      await Bun.sleep(RELAY_POLL_INTERVAL_MS);
-      try {
-        const content = await Bun.file(ownRelayPath).text();
-        if (content.length > relayPosition) {
-          const newContent = content.slice(relayPosition);
-          relayPosition = content.length;
-          for (const line of newContent.split("\n")) {
-            if (!line.trim()) continue;
-            try {
-              emitter.emit(JSON.parse(line));
-            } catch {
-              // skip malformed lines
+  const filePositions = new Map<string, number>();
+
+  const relayPromise = isTopLevel
+    ? (async () => {
+        while (!stopRelay) {
+          await Bun.sleep(RELAY_POLL_INTERVAL_MS);
+          try {
+            const files = await readdir(relayDir);
+            for (const file of files) {
+              if (!file.endsWith(".jsonl")) continue;
+              const filePath = join(relayDir, file);
+              const pos = filePositions.get(filePath) ?? 0;
+              try {
+                const content = await Bun.file(filePath).text();
+                if (content.length > pos) {
+                  const newContent = content.slice(pos);
+                  filePositions.set(filePath, content.length);
+                  for (const line of newContent.split("\n")) {
+                    if (!line.trim()) continue;
+                    try {
+                      emitter.emit(JSON.parse(line));
+                    } catch {
+                      // skip malformed lines
+                    }
+                  }
+                }
+              } catch {
+                // file may be temporarily unavailable
+              }
             }
+          } catch {
+            // relay dir may be temporarily unavailable
           }
         }
-      } catch {
-        // file may be temporarily unavailable
-      }
-    }
-  })();
+      })()
+    : Promise.resolve();
 
   // Announce to parent that this nested workflow is starting
-  if (emitToParent) {
-    parentEmitter!.emit({
-      type: EventType.NESTED_WORKFLOW_START,
-      timestamp: Date.now(),
-      data: { workflow: runConfig.workflow },
-    });
-  } else if (childEventsTarget) {
+  if (childEventsTarget) {
     await appendNestedEvent(childEventsTarget, EventType.NESTED_WORKFLOW_START, {
       workflow: runConfig.workflow,
+      depth: state.depth,
+      instanceId,
     });
   }
 
@@ -136,14 +166,17 @@ export async function runLoop(
         // Resolve template
         const prompt = resolveTemplate(template, contexts, instructions, checkFailuresText, workflowFrontmatter.completable);
 
-        // Run agent, passing the relay file path so nested otto calls can write back
+        // Run agent, passing the relay dir so nested otto calls can write back
         const agentResult = await runAgent(
           {
             command: config.agent.command,
             args: config.agent.args,
             model: workflowFrontmatter.model ?? config.agent.model,
             timeout: runConfig.timeout,
-            extraEnv: { [CHILD_EVENTS_ENV_VAR]: ownRelayPath },
+            extraEnv: {
+              [CHILD_EVENTS_ENV_VAR]: relayDir,
+              [DEPTH_ENV_VAR]: String(state.depth),
+            },
           },
           prompt,
           emitter,
@@ -180,21 +213,16 @@ export async function runLoop(
         });
 
         // Report this iteration to parent
-        const nestedIterationData = {
-          workflow: runConfig.workflow,
-          iteration: state.iteration,
-          status: lastIterationFailed ? "failed" : "succeeded",
-          durationMs: agentResult.durationMs,
-          resultText,
-        };
-        if (emitToParent) {
-          parentEmitter!.emit({
-            type: EventType.NESTED_ITERATION_COMPLETE,
-            timestamp: Date.now(),
-            data: nestedIterationData,
+        if (childEventsTarget) {
+          await appendNestedEvent(childEventsTarget, EventType.NESTED_ITERATION_COMPLETE, {
+            workflow: runConfig.workflow,
+            iteration: state.iteration,
+            status: lastIterationFailed ? "failed" : "succeeded",
+            durationMs: agentResult.durationMs,
+            resultText,
+            depth: state.depth,
+            instanceId,
           });
-        } else if (childEventsTarget) {
-          await appendNestedEvent(childEventsTarget, EventType.NESTED_ITERATION_COMPLETE, nestedIterationData);
         }
 
         // Stop on error if configured
@@ -246,10 +274,12 @@ export async function runLoop(
       }
     }
   } finally {
-    // Stop relay watcher and clean up temp file
+    // Stop relay watcher and clean up
     stopRelay = true;
     await relayPromise;
-    try { await unlink(ownRelayPath); } catch {}
+    if (ownsRelayDir) {
+      try { await rm(relayDir, { recursive: true, force: true }); } catch {}
+    }
 
     process.off("SIGINT", sigintHandler);
 
@@ -274,20 +304,15 @@ export async function runLoop(
     });
 
     // Announce to parent that this nested workflow is complete
-    const nestedCompleteData = {
-      workflow: runConfig.workflow,
-      iterations: state.iteration,
-      succeeded: state.succeeded,
-      failed: state.failed,
-    };
-    if (emitToParent) {
-      parentEmitter!.emit({
-        type: EventType.NESTED_WORKFLOW_COMPLETE,
-        timestamp: Date.now(),
-        data: nestedCompleteData,
+    if (childEventsTarget) {
+      await appendNestedEvent(childEventsTarget, EventType.NESTED_WORKFLOW_COMPLETE, {
+        workflow: runConfig.workflow,
+        iterations: state.iteration,
+        succeeded: state.succeeded,
+        failed: state.failed,
+        depth: state.depth,
+        instanceId,
       });
-    } else if (childEventsTarget) {
-      await appendNestedEvent(childEventsTarget, EventType.NESTED_WORKFLOW_COMPLETE, nestedCompleteData);
     }
   }
 }

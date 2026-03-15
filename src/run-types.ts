@@ -26,7 +26,6 @@ export class RunState {
   checkFailures: string[] = [];
   startTime: number = Date.now();
   depth: number = 0;
-  parentIteration?: number;
 
   private stopRequested: boolean = false;
   private emitter: EventEmitter | null;

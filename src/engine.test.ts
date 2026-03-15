@@ -7,7 +7,7 @@ import { createEmitter, EventType, type Event } from "./events";
 // Mock all heavy dependencies before importing engine.ts.
 // Bun hoists mock.module calls so they run before top-level imports.
 
-const mockRunAgent = mock(() =>
+const mockRunAgent = mock((_config: any, _prompt: string, _emitter?: any) =>
   Promise.resolve({
     resultText: "%%OTTO_STOP%%",
     exitCode: 0,
@@ -320,8 +320,8 @@ describe("processRelayFiles", () => {
       await processRelayFiles(dir, positions, emitter);
 
       expect(events).toHaveLength(2);
-      expect(events[0].type).toBe(EventType.NESTED_WORKFLOW_START);
-      expect(events[1].type).toBe(EventType.NESTED_ITERATION_COMPLETE);
+      expect(events[0]!.type).toBe(EventType.NESTED_WORKFLOW_START);
+      expect(events[1]!.type).toBe(EventType.NESTED_ITERATION_COMPLETE);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -352,7 +352,7 @@ describe("processRelayFiles", () => {
       // Second call only reads event2, not event1 again
       await processRelayFiles(dir, positions, emitter);
       expect(events).toHaveLength(2);
-      expect(events[1].type).toBe(EventType.NESTED_WORKFLOW_COMPLETE);
+      expect(events[1]!.type).toBe(EventType.NESTED_WORKFLOW_COMPLETE);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

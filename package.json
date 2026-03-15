@@ -12,7 +12,8 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/react": "^19.2.14"
+    "@types/react": "^19.2.14",
+    "react-devtools-core": "^7.0.1"
   },
   "peerDependencies": {
     "typescript": "^5"

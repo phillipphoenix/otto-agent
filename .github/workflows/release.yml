@@ -63,7 +63,6 @@ jobs:
           bun build src/cli.ts \
             --compile \
             --target=${{ matrix.target }} \
-            --external react-devtools-core \
             --define CURRENT_VERSION='"${{ needs.sync-version.outputs.version }}"' \
             --outfile ${{ matrix.artifact }}
       - name: Upload to GitHub Release

@@ -20,6 +20,7 @@ Options for 'run':
   --delay <seconds>          Delay between iterations
   --stop-on-error            Stop on non-zero agent exit
   --report-back              Relay iteration events to parent otto process
+                             (auto-enabled when OTTO_CHILD_EVENTS_PATH is set)
 `);
 }
 

@@ -5,6 +5,7 @@ import { initCommand } from "./commands/init";
 import { listCommand } from "./commands/list";
 import { runCommand } from "./commands/run";
 import { updateCommand } from "./commands/update";
+import { currentVersion } from "./version";
 
 function showHelp(): void {
   console.log(`otto — autonomous AI coding agent
@@ -21,6 +22,10 @@ Options for 'run':
   --stop-on-error            Stop on non-zero agent exit
   --report-back              Relay iteration events to parent otto process
                              (auto-enabled when OTTO_CHILD_EVENTS_PATH is set)
+
+Global options:
+  -v, --version              Print version and exit
+  -h, --help                 Show this help message
 `);
 }
 
@@ -32,11 +37,17 @@ async function main(): Promise<void> {
       delay: { type: "string" },
       "stop-on-error": { type: "boolean", default: false },
       "report-back": { type: "boolean", default: false },
+      version: { type: "boolean", short: "v" },
       help: { type: "boolean", short: "h" },
     },
     allowPositionals: true,
     strict: true,
   });
+
+  if (values.version) {
+    console.log(currentVersion);
+    process.exit(0);
+  }
 
   if (values.help || positionals.length === 0) {
     showHelp();

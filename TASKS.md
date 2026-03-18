@@ -7,4 +7,4 @@
 - [x] Add `denyList` with sensible defaults to the init template — file: `src/commands/init.ts`
 - [x] Update repo's own `.otto/otto.json` with `denyList` defaults — file: `.otto/otto.json`
 - [x] Add unit tests for `deny` frontmatter parsing — file: `src/primitives/frontmatter.test.ts`
-- [ ] Add config schema unit tests for `denyList` — file: `src/config.test.ts`
+- [x] Add config schema unit tests for `denyList` — file: `src/config.test.ts`

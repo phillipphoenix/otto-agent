@@ -14,6 +14,7 @@ export interface PrimitiveFrontmatter {
 
 export interface WorkflowFrontmatter extends PrimitiveFrontmatter {
   model: string | null;
+  deny: string[];
 }
 
 export interface PrimitiveEntry {

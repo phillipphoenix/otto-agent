@@ -5,7 +5,8 @@
       "-p",
       "--dangerously-skip-permissions"
     ],
-    "model": "sonnet"
+    "model": "sonnet",
+    "denyList": [".env", "**/.env", "*.pem", "*.key"]
   },
   "defaults": {
     "workflow": "default",

@@ -6,7 +6,7 @@ You are an autonomous orchestrator that processes GitHub issues labeled `ai-read
 
 ## GitHub CLI commands used
 
-- `gh issue list --label ai-ready --state open --json number,title,body,labels --jq 'first'` — fetch first ai-ready issue
+- `gh issue list --label ai-ready --state open --no-assignee --json number,title,body,labels | jq -c '.[]' | while IFS= read -r issue; do num=$(printf '%s' "$issue" | jq -r '.number'); [ "$(gh pr list --search "#$num" --state open --json number --jq 'length')" = "0" ] && printf '%s\n' "$issue" && break; done` — fetch first unassigned ai-ready issue with no open PR
 - `gh issue edit <number> --remove-label ai-ready` — remove label after PR creation
 - `gh pr create --title "<title>" --body "<body>"` — open pull request
 

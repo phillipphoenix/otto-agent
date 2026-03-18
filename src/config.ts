@@ -7,11 +7,13 @@ export const OttoConfigSchema = z.object({
       command: z.string().default("claude"),
       args: z.array(z.string()).default(["-p", "--dangerously-skip-permissions"]),
       model: z.string().default("sonnet"),
+      denyList: z.array(z.string()).default([]),
     })
     .default({
       command: "claude",
       args: ["-p", "--dangerously-skip-permissions"],
       model: "sonnet",
+      denyList: [],
     }),
   defaults: z
     .object({

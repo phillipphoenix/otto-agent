@@ -62,7 +62,7 @@ export function parseWorkflowFrontmatter(content: string): {
   body: string;
 } {
   const { frontmatter: base, body } = parseFrontmatter(content);
-  const workflowDefaults: WorkflowFrontmatter = { ...base, model: null };
+  const workflowDefaults: WorkflowFrontmatter = { ...base, model: null, deny: [] };
 
   const trimmed = content.trimStart();
   if (!trimmed.startsWith("---")) {
@@ -85,6 +85,9 @@ export function parseWorkflowFrontmatter(content: string): {
 
     if (key === "model") {
       frontmatter.model = value || null;
+    } else if (key === "deny" && value) {
+      // Support repeated `deny:` lines — each adds one entry to the array
+      frontmatter.deny.push(value);
     }
   }
 

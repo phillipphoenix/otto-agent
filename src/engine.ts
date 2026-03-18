@@ -184,11 +184,15 @@ export async function runLoop(
         // Resolve template
         const prompt = resolveTemplate(template, contexts, instructions, checkFailuresText, workflowFrontmatter.completable);
 
+        // Merge global and workflow-level deny lists into --deny flags
+        const denyEntries = [...(config.agent.denyList ?? []), ...(workflowFrontmatter.deny ?? [])];
+        const denyArgs = denyEntries.flatMap((entry) => ["--deny", entry]);
+
         // Run agent, passing the relay dir so nested otto calls can write back
         const agentResult = await runAgent(
           {
             command: config.agent.command,
-            args: config.agent.args,
+            args: [...config.agent.args, ...denyArgs],
             model: workflowFrontmatter.model ?? config.agent.model,
             timeout: runConfig.timeout,
             extraEnv: {

@@ -101,4 +101,53 @@ Body
     expect(frontmatter.model).toBe("haiku");
     expect(frontmatter.timeout).toBe(60);
   });
+
+  test("parses a single deny entry", () => {
+    const content = `---
+deny: .env
+---
+# Workflow body
+`;
+    const { frontmatter } = parseWorkflowFrontmatter(content);
+    expect(frontmatter.deny).toEqual([".env"]);
+  });
+
+  test("parses multiple deny entries from repeated lines", () => {
+    const content = `---
+deny: .env
+deny: **/.env
+deny: secrets.json
+---
+# Workflow body
+`;
+    const { frontmatter } = parseWorkflowFrontmatter(content);
+    expect(frontmatter.deny).toEqual([".env", "**/.env", "secrets.json"]);
+  });
+
+  test("returns empty deny array when no deny key is present", () => {
+    const content = `---
+model: opus
+---
+# Workflow body
+`;
+    const { frontmatter } = parseWorkflowFrontmatter(content);
+    expect(frontmatter.deny).toEqual([]);
+  });
+
+  test("returns empty deny array when there is no frontmatter block", () => {
+    const content = "Just plain workflow content.";
+    const { frontmatter } = parseWorkflowFrontmatter(content);
+    expect(frontmatter.deny).toEqual([]);
+  });
+
+  test("ignores deny line with empty value", () => {
+    const content = `---
+deny:
+deny: .env
+---
+# Workflow body
+`;
+    const { frontmatter } = parseWorkflowFrontmatter(content);
+    expect(frontmatter.deny).toEqual([".env"]);
+  });
 });

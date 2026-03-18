@@ -6,6 +6,7 @@ const DEFAULT_CONFIG = {
     command: "claude",
     args: ["-p", "--dangerously-skip-permissions"],
     model: "sonnet",
+    denyList: [".env", "**/.env", "*.pem", "*.key"],
   },
   defaults: {
     workflow: "default",

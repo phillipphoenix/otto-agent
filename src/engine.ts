@@ -182,7 +182,7 @@ export async function runLoop(
           state.checkFailures.length > 0 ? state.checkFailures.join("\n\n") : undefined;
 
         // Resolve template
-        const prompt = resolveTemplate(template, contexts, instructions, checkFailuresText, workflowFrontmatter.completable);
+        const prompt = resolveTemplate(template, contexts, instructions, checkFailuresText);
 
         // Merge global and workflow-level deny lists into --disallowed-tools flags
         const denyEntries = [...(config.agent.denyList ?? []), ...(workflowFrontmatter.deny ?? [])];

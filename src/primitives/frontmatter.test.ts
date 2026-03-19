@@ -8,7 +8,6 @@ enabled: true
 command: check
 timeout: 30
 description: Run checks
-completable: true
 ---
 # Body content
 `;
@@ -17,7 +16,6 @@ completable: true
     expect(frontmatter.command).toBe("check");
     expect(frontmatter.timeout).toBe(30);
     expect(frontmatter.description).toBe("Run checks");
-    expect(frontmatter.completable).toBe(true);
     expect(body).toContain("# Body content");
   });
 
@@ -32,7 +30,6 @@ Body here
     expect(frontmatter.command).toBe("lint");
     expect(frontmatter.timeout).toBeNull();
     expect(frontmatter.description).toBeNull();
-    expect(frontmatter.completable).toBe(false);
   });
 
   test("returns defaults when there is no frontmatter block", () => {
@@ -42,7 +39,6 @@ Body here
     expect(frontmatter.command).toBeNull();
     expect(frontmatter.timeout).toBeNull();
     expect(frontmatter.description).toBeNull();
-    expect(frontmatter.completable).toBe(false);
     expect(body).toBe("Just plain content with no frontmatter.");
   });
 
@@ -61,19 +57,16 @@ describe("parseWorkflowFrontmatter", () => {
   test("parses model field from frontmatter", () => {
     const content = `---
 model: opus
-completable: true
 ---
 # Workflow body
 `;
     const { frontmatter, body } = parseWorkflowFrontmatter(content);
     expect(frontmatter.model).toBe("opus");
-    expect(frontmatter.completable).toBe(true);
     expect(body).toContain("# Workflow body");
   });
 
   test("returns null model when model is not specified", () => {
     const content = `---
-completable: true
 ---
 # Workflow body
 `;

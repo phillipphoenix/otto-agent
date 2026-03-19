@@ -5,10 +5,11 @@ import { tmpdir } from "node:os";
 import { type EventEmitter, EventType } from "./events";
 import type { OttoConfig } from "./config";
 import { type RunConfig, RunState, RunStatus } from "./run-types";
-import { discoverPrimitives } from "./primitives/discovery";
+import { discoverPrimitives, discoverCompletionCheck } from "./primitives/discovery";
 import { runContexts } from "./primitives/contexts";
 import { loadInstructions } from "./primitives/instructions";
 import { runChecks } from "./primitives/checks";
+import { runCompletionCheck } from "./primitives/completionCheck";
 import { resolveTemplate } from "./resolver";
 import { runAgent } from "./agent";
 import { formatDuration } from "./output";
@@ -258,6 +259,21 @@ export async function runLoop(
         state.checkFailures = checkResults.failed.map(
           (f) => `### ${f.name}\n\n${f.output}`,
         );
+
+        // Run completion check if present
+        const completionCheckEntry = await discoverCompletionCheck(projectDir, runConfig.workflow);
+        if (completionCheckEntry) {
+          const checkFailuresForCompletion =
+            state.checkFailures.length > 0 ? state.checkFailures.join("\n\n") : undefined;
+          const isDone = await runCompletionCheck(
+            completionCheckEntry,
+            config.agent.command,
+            contexts,
+            instructions,
+            checkFailuresForCompletion,
+          );
+          if (isDone) break;
+        }
 
         // Delay between iterations
         if (runConfig.delay > 0) {

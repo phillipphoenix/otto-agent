@@ -6,7 +6,7 @@
 - [x] Add `CompletionCheckEntry` interface and `parseCompletionCheckFrontmatter` — file(s): `src/primitives/types.ts`, `src/primitives/frontmatter.ts`
 - [x] Add `discoverCompletionCheck` function — file(s): `src/primitives/discovery.ts`
 - [x] Create `src/primitives/completionCheck.ts` with `runCompletionCheck` — file(s): `src/primitives/completionCheck.ts`
-- [ ] Integrate completion check into `runLoop` (after checks run, call discoverCompletionCheck + runCompletionCheck, break if YES) — file(s): `src/engine.ts`
+- [x] Integrate completion check into `runLoop` (after checks run, call discoverCompletionCheck + runCompletionCheck, break if YES) — file(s): `src/engine.ts`
 - [ ] Update task-worker workflow: remove `completable: true`, add `COMPLETION_CHECK.md` — file(s): `.otto/workflows/task-worker/WORKFLOW.md`, `.otto/workflows/task-worker/COMPLETION_CHECK.md`
 - [ ] Update example workflow: remove `completable: true`, add `COMPLETION_CHECK.md` — file(s): `.otto/workflows/example/WORKFLOW.md`, `.otto/workflows/example/COMPLETION_CHECK.md`
 - [ ] Update improve-readme workflow: remove `completable: true`, add `COMPLETION_CHECK.md` — file(s): `.otto/workflows/improve-readme/WORKFLOW.md`, `.otto/workflows/improve-readme/COMPLETION_CHECK.md`

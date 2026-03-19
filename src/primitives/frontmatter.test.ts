@@ -1,5 +1,5 @@
 import { test, expect, describe } from "bun:test";
-import { parseFrontmatter, parseWorkflowFrontmatter } from "./frontmatter";
+import { parseFrontmatter, parseCompletionCheckFrontmatter, parseWorkflowFrontmatter } from "./frontmatter";
 
 describe("parseFrontmatter", () => {
   test("parses valid frontmatter with all fields populated", () => {
@@ -142,5 +142,55 @@ deny: .env
 `;
     const { frontmatter } = parseWorkflowFrontmatter(content);
     expect(frontmatter.deny).toEqual([".env"]);
+  });
+});
+
+describe("parseCompletionCheckFrontmatter", () => {
+  test("defaults enabled to true when no frontmatter block", () => {
+    const content = "Respond YES if done, NO otherwise.";
+    const { frontmatter, body } = parseCompletionCheckFrontmatter(content);
+    expect(frontmatter.enabled).toBe(true);
+    expect(body).toBe("Respond YES if done, NO otherwise.");
+  });
+
+  test("parses enabled: false", () => {
+    const content = `---
+enabled: false
+---
+Prompt body
+`;
+    const { frontmatter, body } = parseCompletionCheckFrontmatter(content);
+    expect(frontmatter.enabled).toBe(false);
+    expect(body).toBe("Prompt body");
+  });
+
+  test("defaults enabled to true when frontmatter block has no enabled key", () => {
+    const content = `---
+---
+Prompt body
+`;
+    const { frontmatter } = parseCompletionCheckFrontmatter(content);
+    expect(frontmatter.enabled).toBe(true);
+  });
+
+  test("strips HTML comments from body", () => {
+    const content = `---
+enabled: true
+---
+<!-- hidden -->
+Visible content
+`;
+    const { body } = parseCompletionCheckFrontmatter(content);
+    expect(body).not.toContain("<!-- hidden -->");
+    expect(body).toContain("Visible content");
+  });
+
+  test("returns defaults when frontmatter block is unclosed", () => {
+    const content = `---
+enabled: false
+Prompt body`;
+    const { frontmatter, body } = parseCompletionCheckFrontmatter(content);
+    expect(frontmatter.enabled).toBe(true);
+    expect(body).toContain("Prompt body");
   });
 });

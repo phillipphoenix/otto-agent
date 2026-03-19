@@ -12,5 +12,5 @@
 - [x] Update improve-readme workflow: remove `completable: true`, add `COMPLETION_CHECK.md` — file(s): `.otto/workflows/improve-readme/WORKFLOW.md`, `.otto/workflows/improve-readme/COMPLETION_CHECK.md`
 - [x] Update issue-orchestrator workflow: remove `completable: true`, add `COMPLETION_CHECK.md` — file(s): `.otto/workflows/issue-orchestrator/WORKFLOW.md`, `.otto/workflows/issue-orchestrator/COMPLETION_CHECK.md`
 - [x] Update enrich-gh-issue workflow: remove `completable: true`, add `COMPLETION_CHECK.md` — file(s): `.otto/workflows/enrich-gh-issue/WORKFLOW.md`, `.otto/workflows/enrich-gh-issue/COMPLETION_CHECK.md`
-- [ ] Update `frontmatter.test.ts`: remove `completable` references, add `parseCompletionCheckFrontmatter` unit tests — file(s): `src/primitives/frontmatter.test.ts`
-- [ ] Update `engine.test.ts`: remove STOP_MARKER mock result, add completion check mock and integration test that verifies loop stops when check returns YES — file(s): `src/engine.test.ts`
+- [x] Update `frontmatter.test.ts`: remove `completable` references, add `parseCompletionCheckFrontmatter` unit tests — file(s): `src/primitives/frontmatter.test.ts`
+- [x] Update `engine.test.ts`: remove STOP_MARKER mock result, add completion check mock and integration test that verifies loop stops when check returns YES — file(s): `src/engine.test.ts`

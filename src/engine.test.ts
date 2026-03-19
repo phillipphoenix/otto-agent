@@ -16,10 +16,10 @@ const mockRunAgent = mock((_config: any, _prompt: string, _emitter?: any) =>
   }),
 );
 
-const mockRunContexts = mock(() => Promise.resolve([]));
+const mockRunContexts = mock((): Promise<{ name: string; content: string }[]> => Promise.resolve([]));
 const mockDiscoverPrimitives = mock(() => Promise.resolve([]));
-const mockRunCompletionCheck = mock(() => Promise.resolve({ completed: false }));
-const mockDiscoverCompletionCheck = mock(() => Promise.resolve(null));
+const mockRunCompletionCheck = mock((..._args: any[]): Promise<{ completed: boolean }> => Promise.resolve({ completed: false }));
+const mockDiscoverCompletionCheck = mock((): Promise<import("./primitives/types").CompletionCheckEntry | null> => Promise.resolve(null));
 
 mock.module("./agent", () => ({ runAgent: mockRunAgent }));
 mock.module("./primitives/discovery", () => ({
@@ -320,7 +320,7 @@ describe("runLoop nested events via relay directory", () => {
     delete process.env[CHILD_EVENTS_ENV_VAR];
     delete process.env[DEPTH_ENV_VAR];
 
-    const fakeEntry = { frontmatter: { enabled: true }, content: "Is work done?", filePath: "/fake/COMPLETION_CHECK.md" };
+    const fakeEntry = { frontmatter: { enabled: true }, body: "Is work done?", filePath: "/fake/COMPLETION_CHECK.md" };
     mockDiscoverCompletionCheck.mockImplementation(() => Promise.resolve(fakeEntry));
     mockRunCompletionCheck.mockImplementation(() => Promise.resolve({ completed: true }));
 

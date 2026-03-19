@@ -5,14 +5,14 @@ import { tmpdir } from "node:os";
 import { type EventEmitter, EventType } from "./events";
 import type { OttoConfig } from "./config";
 import { type RunConfig, RunState, RunStatus } from "./run-types";
-import { discoverPrimitives } from "./primitives/discovery";
+import { discoverPrimitives, discoverCompletionCheck } from "./primitives/discovery";
 import { runContexts } from "./primitives/contexts";
 import { loadInstructions } from "./primitives/instructions";
 import { runChecks } from "./primitives/checks";
+import { runCompletionCheck } from "./primitives/completionCheck";
 import { resolveTemplate } from "./resolver";
 import { runAgent } from "./agent";
 import { formatDuration } from "./output";
-import { STOP_MARKER } from "./constants";
 import { parseWorkflowFrontmatter } from "./primitives/frontmatter";
 
 /** Env var used to pass the shared relay directory path to child otto processes. */
@@ -182,7 +182,7 @@ export async function runLoop(
           state.checkFailures.length > 0 ? state.checkFailures.join("\n\n") : undefined;
 
         // Resolve template
-        const prompt = resolveTemplate(template, contexts, instructions, checkFailuresText, workflowFrontmatter.completable);
+        const prompt = resolveTemplate(template, contexts, instructions, checkFailuresText);
 
         // Merge global and workflow-level deny lists into --disallowed-tools flags
         const denyEntries = [...(config.agent.denyList ?? []), ...(workflowFrontmatter.deny ?? [])];
@@ -221,11 +221,7 @@ export async function runLoop(
           lastIterationFailed = false;
         }
 
-        // Check if agent signalled completion
-        const agentRequestedStop = agentResult.resultText.includes(STOP_MARKER);
-
-        // Strip stop marker from displayed result text
-        const resultText = agentResult.resultText.replaceAll(STOP_MARKER, "").trim();
+        const resultText = agentResult.resultText.trim();
 
         // Emit ITERATION_COMPLETE
         emitter.emit({
@@ -255,16 +251,6 @@ export async function runLoop(
         // Stop on error if configured
         if (runConfig.stopOnError && lastIterationFailed) break;
 
-        // Stop if agent signalled task completion
-        if (agentRequestedStop) {
-          emitter.emit({
-            type: EventType.LOG_MESSAGE,
-            timestamp: Date.now(),
-            data: { level: "info", message: "Agent signalled task completion" },
-          });
-          break;
-        }
-
         // Discover and run checks
         const checkEntries = await discoverPrimitives(projectDir, runConfig.workflow, "checks");
         const checkResults = await runChecks(checkEntries, emitter);
@@ -273,6 +259,28 @@ export async function runLoop(
         state.checkFailures = checkResults.failed.map(
           (f) => `### ${f.name}\n\n${f.output}`,
         );
+
+        // Run completion check if present
+        const completionCheckEntry = await discoverCompletionCheck(projectDir, runConfig.workflow);
+        if (completionCheckEntry) {
+          const checkFailuresForCompletion =
+            state.checkFailures.length > 0 ? state.checkFailures.join("\n\n") : undefined;
+          const result = await runCompletionCheck(
+            completionCheckEntry,
+            config.agent.command,
+            contexts,
+            instructions,
+            checkFailuresForCompletion,
+          );
+          if (result.error) {
+            emitter.emit({
+              type: EventType.LOG_MESSAGE,
+              timestamp: Date.now(),
+              data: { level: "error", message: `Completion check error: ${result.error}` },
+            });
+          }
+          if (result.completed) break;
+        }
 
         // Delay between iterations
         if (runConfig.delay > 0) {

@@ -9,16 +9,20 @@ import { createEmitter, EventType, type Event } from "./events";
 
 const mockRunAgent = mock((_config: any, _prompt: string, _emitter?: any) =>
   Promise.resolve({
-    resultText: "%%OTTO_STOP%%",
+    resultText: "Done.",
     exitCode: 0,
     timedOut: false,
     durationMs: 100,
   }),
 );
 
+const mockRunCompletionCheck = mock(() => Promise.resolve({ completed: false }));
+const mockDiscoverCompletionCheck = mock(() => Promise.resolve(null));
+
 mock.module("./agent", () => ({ runAgent: mockRunAgent }));
 mock.module("./primitives/discovery", () => ({
   discoverPrimitives: mock(() => Promise.resolve([])),
+  discoverCompletionCheck: mockDiscoverCompletionCheck,
 }));
 mock.module("./primitives/contexts", () => ({
   runContexts: mock(() => Promise.resolve([])),
@@ -28,6 +32,9 @@ mock.module("./primitives/instructions", () => ({
 }));
 mock.module("./primitives/checks", () => ({
   runChecks: mock(() => Promise.resolve({ passed: [], failed: [] })),
+}));
+mock.module("./primitives/completionCheck", () => ({
+  runCompletionCheck: mockRunCompletionCheck,
 }));
 mock.module("./resolver", () => ({
   resolveTemplate: mock(() => "test prompt"),
@@ -79,6 +86,8 @@ beforeEach(async () => {
   };
 
   mockRunAgent.mockClear();
+  mockRunCompletionCheck.mockClear();
+  mockDiscoverCompletionCheck.mockClear();
 });
 
 afterEach(async () => {
@@ -257,7 +266,7 @@ describe("runLoop nested events via relay directory", () => {
     mockRunAgent.mockImplementation((agentConfig: any) => {
       capturedRelayDir = agentConfig.extraEnv?.[CHILD_EVENTS_ENV_VAR];
       return Promise.resolve({
-        resultText: "%%OTTO_STOP%%",
+        resultText: "Done.",
         exitCode: 0,
         timedOut: false,
         durationMs: 100,
@@ -289,7 +298,7 @@ describe("runLoop nested events via relay directory", () => {
     mockRunAgent.mockImplementation((agentConfig: any) => {
       capturedEnv = agentConfig.extraEnv;
       return Promise.resolve({
-        resultText: "%%OTTO_STOP%%",
+        resultText: "Done.",
         exitCode: 0,
         timedOut: false,
         durationMs: 100,
@@ -301,6 +310,29 @@ describe("runLoop nested events via relay directory", () => {
     expect(capturedEnv).toBeDefined();
     expect(capturedEnv![CHILD_EVENTS_ENV_VAR]).toBeDefined();
     expect(capturedEnv![DEPTH_ENV_VAR]).toBe("0"); // top-level depth
+  });
+
+  test("stops loop early when completion check returns YES", async () => {
+    delete process.env[CHILD_EVENTS_ENV_VAR];
+    delete process.env[DEPTH_ENV_VAR];
+
+    const fakeEntry = { frontmatter: { enabled: true }, content: "Is work done?", filePath: "/fake/COMPLETION_CHECK.md" };
+    mockDiscoverCompletionCheck.mockImplementation(() => Promise.resolve(fakeEntry));
+    mockRunCompletionCheck.mockImplementation(() => Promise.resolve({ completed: true }));
+
+    const emitter = createEmitter();
+    const events: import("./events").Event[] = [];
+    emitter.subscribe((e) => events.push(e));
+
+    // maxIterations=5 but completion check should stop it after 1
+    await runLoop(projectDir, MINIMAL_CONFIG, makeRunConfig({ maxIterations: 5 }), emitter);
+
+    const iterations = events.filter((e) => e.type === EventType.ITERATION_COMPLETE);
+    expect(iterations).toHaveLength(1);
+
+    // Restore mocks
+    mockDiscoverCompletionCheck.mockImplementation(() => Promise.resolve(null));
+    mockRunCompletionCheck.mockImplementation(() => Promise.resolve({ completed: false }));
   });
 });
 

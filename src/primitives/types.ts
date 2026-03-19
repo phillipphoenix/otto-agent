@@ -9,7 +9,6 @@ export interface PrimitiveFrontmatter {
   command: string | null;
   timeout: number | null;
   description: string | null;
-  completable: boolean;
 }
 
 export interface WorkflowFrontmatter extends PrimitiveFrontmatter {
@@ -24,4 +23,14 @@ export interface PrimitiveEntry {
   body: string;
   filePath: string;
   scope: "global" | "workflow";
+}
+
+export interface CompletionCheckFrontmatter {
+  enabled: boolean;
+}
+
+export interface CompletionCheckEntry {
+  frontmatter: CompletionCheckFrontmatter;
+  body: string;
+  filePath: string;
 }

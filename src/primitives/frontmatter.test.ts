@@ -1,5 +1,5 @@
 import { test, expect, describe } from "bun:test";
-import { parseFrontmatter, parseWorkflowFrontmatter } from "./frontmatter";
+import { parseFrontmatter, parseCompletionCheckFrontmatter, parseWorkflowFrontmatter } from "./frontmatter";
 
 describe("parseFrontmatter", () => {
   test("parses valid frontmatter with all fields populated", () => {
@@ -8,7 +8,6 @@ enabled: true
 command: check
 timeout: 30
 description: Run checks
-completable: true
 ---
 # Body content
 `;
@@ -17,7 +16,6 @@ completable: true
     expect(frontmatter.command).toBe("check");
     expect(frontmatter.timeout).toBe(30);
     expect(frontmatter.description).toBe("Run checks");
-    expect(frontmatter.completable).toBe(true);
     expect(body).toContain("# Body content");
   });
 
@@ -32,7 +30,6 @@ Body here
     expect(frontmatter.command).toBe("lint");
     expect(frontmatter.timeout).toBeNull();
     expect(frontmatter.description).toBeNull();
-    expect(frontmatter.completable).toBe(false);
   });
 
   test("returns defaults when there is no frontmatter block", () => {
@@ -42,7 +39,6 @@ Body here
     expect(frontmatter.command).toBeNull();
     expect(frontmatter.timeout).toBeNull();
     expect(frontmatter.description).toBeNull();
-    expect(frontmatter.completable).toBe(false);
     expect(body).toBe("Just plain content with no frontmatter.");
   });
 
@@ -61,19 +57,16 @@ describe("parseWorkflowFrontmatter", () => {
   test("parses model field from frontmatter", () => {
     const content = `---
 model: opus
-completable: true
 ---
 # Workflow body
 `;
     const { frontmatter, body } = parseWorkflowFrontmatter(content);
     expect(frontmatter.model).toBe("opus");
-    expect(frontmatter.completable).toBe(true);
     expect(body).toContain("# Workflow body");
   });
 
   test("returns null model when model is not specified", () => {
     const content = `---
-completable: true
 ---
 # Workflow body
 `;
@@ -149,5 +142,55 @@ deny: .env
 `;
     const { frontmatter } = parseWorkflowFrontmatter(content);
     expect(frontmatter.deny).toEqual([".env"]);
+  });
+});
+
+describe("parseCompletionCheckFrontmatter", () => {
+  test("defaults enabled to true when no frontmatter block", () => {
+    const content = "Respond YES if done, NO otherwise.";
+    const { frontmatter, body } = parseCompletionCheckFrontmatter(content);
+    expect(frontmatter.enabled).toBe(true);
+    expect(body).toBe("Respond YES if done, NO otherwise.");
+  });
+
+  test("parses enabled: false", () => {
+    const content = `---
+enabled: false
+---
+Prompt body
+`;
+    const { frontmatter, body } = parseCompletionCheckFrontmatter(content);
+    expect(frontmatter.enabled).toBe(false);
+    expect(body).toBe("Prompt body");
+  });
+
+  test("defaults enabled to true when frontmatter block has no enabled key", () => {
+    const content = `---
+---
+Prompt body
+`;
+    const { frontmatter } = parseCompletionCheckFrontmatter(content);
+    expect(frontmatter.enabled).toBe(true);
+  });
+
+  test("strips HTML comments from body", () => {
+    const content = `---
+enabled: true
+---
+<!-- hidden -->
+Visible content
+`;
+    const { body } = parseCompletionCheckFrontmatter(content);
+    expect(body).not.toContain("<!-- hidden -->");
+    expect(body).toContain("Visible content");
+  });
+
+  test("returns defaults when frontmatter block is unclosed", () => {
+    const content = `---
+enabled: false
+Prompt body`;
+    const { frontmatter, body } = parseCompletionCheckFrontmatter(content);
+    expect(frontmatter.enabled).toBe(true);
+    expect(body).toContain("Prompt body");
   });
 });

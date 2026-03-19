@@ -1,25 +1,8 @@
-import { STOP_MARKER } from "./constants";
-
-const STOP_INSTRUCTION = `
-
-## Completion
-
-You are running in a loop. Each iteration you will receive this same prompt with fresh context.
-Only signal completion when ALL criteria in the task above are fully satisfied — not after a single unit of work.
-Check whether the task defines a target (e.g. a number of items, a specific end state). If it does, verify that target is met before stopping.
-
-When the entire task is complete, end your response with exactly:
-
-${STOP_MARKER}
-
-Do NOT include the stop marker if there is ANY work still remaining.`;
-
 export function resolveTemplate(
   template: string,
   contexts: Map<string, string>,
   instructions: Map<string, string>,
   checkFailures?: string,
-  completable?: boolean,
 ): string {
   let result = template;
 
@@ -80,14 +63,17 @@ export function resolveTemplate(
     }
   }
 
-  // Append check failures at the end
+  // Replace {{ checks }} placeholder if present, otherwise append check failures at end
   if (checkFailures) {
-    result = result + "\n\n## Check Failures\n\n" + checkFailures;
-  }
-
-  // Append stop instruction only for completable workflows
-  if (completable) {
-    result = result + STOP_INSTRUCTION;
+    const checksPlaceholder = /\{\{\s*checks\s*\}\}/;
+    if (checksPlaceholder.test(result)) {
+      result = result.replace(checksPlaceholder, checkFailures);
+    } else {
+      result = result + "\n\n## Check Failures\n\n" + checkFailures;
+    }
+  } else {
+    // Remove the {{ checks }} placeholder if no failures to inject
+    result = result.replace(/\{\{\s*checks\s*\}\}/g, "");
   }
 
   return result;

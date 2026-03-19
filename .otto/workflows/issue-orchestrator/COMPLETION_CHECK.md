@@ -1,8 +1,12 @@
 ---
-description: Check if the orchestrator has completed processing an issue and opened a PR
+description: Check if no more available issues remain to process
 ---
-Review the context and checks below. Has the orchestrator finished processing exactly one issue — meaning it has opened a pull request, removed the `ai-ready` label, and returned to main?
+Review the context and checks below. Are there no more available issues remaining to process? The workflow is complete when the context returns no `ai-ready` issues left.
+
+## Contexts
 
 {{ contexts }}
+
+## Checks
 
 {{ checks }}

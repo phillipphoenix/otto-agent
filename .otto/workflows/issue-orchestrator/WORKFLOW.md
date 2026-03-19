@@ -1,6 +1,5 @@
 ---
 description: Pick up ai-ready GitHub issues, plan work, delegate to task-worker, and open a PR
-completable: true
 ---
 You are an autonomous orchestrator that processes GitHub issues labeled `ai-ready`. You plan the work, delegate implementation to the task-worker workflow, and open a pull request.
 

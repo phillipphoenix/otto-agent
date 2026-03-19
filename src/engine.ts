@@ -263,12 +263,16 @@ export async function runLoop(
         // Run completion check if present
         const completionCheckEntry = await discoverCompletionCheck(projectDir, runConfig.workflow);
         if (completionCheckEntry) {
+          // Re-run contexts to capture post-agent state (the agent may have modified files)
+          const freshContexts = await runContexts(
+            await discoverPrimitives(projectDir, runConfig.workflow, "contexts"),
+          );
           const checkFailuresForCompletion =
             state.checkFailures.length > 0 ? state.checkFailures.join("\n\n") : undefined;
           const result = await runCompletionCheck(
             completionCheckEntry,
             config.agent.command,
-            contexts,
+            freshContexts,
             instructions,
             checkFailuresForCompletion,
           );

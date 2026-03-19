@@ -16,16 +16,18 @@ const mockRunAgent = mock((_config: any, _prompt: string, _emitter?: any) =>
   }),
 );
 
+const mockRunContexts = mock(() => Promise.resolve([]));
+const mockDiscoverPrimitives = mock(() => Promise.resolve([]));
 const mockRunCompletionCheck = mock(() => Promise.resolve({ completed: false }));
 const mockDiscoverCompletionCheck = mock(() => Promise.resolve(null));
 
 mock.module("./agent", () => ({ runAgent: mockRunAgent }));
 mock.module("./primitives/discovery", () => ({
-  discoverPrimitives: mock(() => Promise.resolve([])),
+  discoverPrimitives: mockDiscoverPrimitives,
   discoverCompletionCheck: mockDiscoverCompletionCheck,
 }));
 mock.module("./primitives/contexts", () => ({
-  runContexts: mock(() => Promise.resolve([])),
+  runContexts: mockRunContexts,
 }));
 mock.module("./primitives/instructions", () => ({
   loadInstructions: mock(() => []),
@@ -86,6 +88,8 @@ beforeEach(async () => {
   };
 
   mockRunAgent.mockClear();
+  mockRunContexts.mockClear();
+  mockDiscoverPrimitives.mockClear();
   mockRunCompletionCheck.mockClear();
   mockDiscoverCompletionCheck.mockClear();
 });
@@ -331,6 +335,43 @@ describe("runLoop nested events via relay directory", () => {
     expect(iterations).toHaveLength(1);
 
     // Restore mocks
+    mockDiscoverCompletionCheck.mockImplementation(() => Promise.resolve(null));
+    mockRunCompletionCheck.mockImplementation(() => Promise.resolve({ completed: false }));
+  });
+
+  test("completion check receives fresh (post-agent) contexts, not stale ones", async () => {
+    delete process.env[CHILD_EVENTS_ENV_VAR];
+    delete process.env[DEPTH_ENV_VAR];
+
+    const staleContexts = [{ name: "tasks", content: "- [ ] Do something" }];
+    const freshContexts = [{ name: "tasks", content: "- [x] Do something" }];
+
+    // First call returns stale (used for agent prompt), second call returns fresh (for completion check)
+    let contextCallCount = 0;
+    mockRunContexts.mockImplementation(() => {
+      contextCallCount++;
+      return Promise.resolve(contextCallCount === 1 ? staleContexts : freshContexts);
+    });
+
+    const fakeEntry = { frontmatter: { enabled: true }, body: "Is work done?", filePath: "/fake/COMPLETION_CHECK.md" };
+    mockDiscoverCompletionCheck.mockImplementation(() => Promise.resolve(fakeEntry));
+
+    let capturedContexts: any = null;
+    mockRunCompletionCheck.mockImplementation((_entry: any, _cmd: any, contexts: any) => {
+      capturedContexts = contexts;
+      return Promise.resolve({ completed: true });
+    });
+
+    const emitter = createEmitter();
+    await runLoop(projectDir, MINIMAL_CONFIG, makeRunConfig({ maxIterations: 1 }), emitter);
+
+    // runContexts should have been called twice: once for agent prompt, once for completion check
+    expect(contextCallCount).toBe(2);
+    // Completion check should have received the fresh contexts
+    expect(capturedContexts).toEqual(freshContexts);
+
+    // Restore mocks
+    mockRunContexts.mockImplementation(() => Promise.resolve([]));
     mockDiscoverCompletionCheck.mockImplementation(() => Promise.resolve(null));
     mockRunCompletionCheck.mockImplementation(() => Promise.resolve({ completed: false }));
   });

@@ -48,19 +48,19 @@ export default function IterationView({ data, isLast }: IterationViewProps) {
       {/* Agent output */}
       <AgentOutput lines={data.agentLines} />
 
-      {/* Result summary */}
-      {!isRunning && data.resultText && (
-        <Box marginLeft={1}>
-          <Text dimColor>{data.resultText}</Text>
-        </Box>
-      )}
-
       {/* Nested iterations */}
       {data.nestedIterations.length > 0 && (
         <Box flexDirection="column" marginTop={0}>
           {data.nestedIterations.map((nested, i) => (
             <NestedIterationRow key={i} data={nested} />
           ))}
+        </Box>
+      )}
+
+      {/* Result summary */}
+      {!isRunning && data.resultText && (
+        <Box marginLeft={1} marginTop={1}>
+          <Text dimColor>{data.resultText}</Text>
         </Box>
       )}
 

@@ -1,6 +1,5 @@
 ---
 description: Implement one task at a time from TASKS.md, committing after each
-completable: true
 ---
 You are an autonomous coding agent that implements tasks from a checklist one at a time.
 

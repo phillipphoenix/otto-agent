@@ -24,3 +24,13 @@ export interface PrimitiveEntry {
   filePath: string;
   scope: "global" | "workflow";
 }
+
+export interface CompletionCheckFrontmatter {
+  enabled: boolean;
+}
+
+export interface CompletionCheckEntry {
+  frontmatter: CompletionCheckFrontmatter;
+  body: string;
+  filePath: string;
+}

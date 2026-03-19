@@ -1,5 +1,5 @@
-import { PrimitiveType, type PrimitiveEntry } from "./types";
-import { parseFrontmatter } from "./frontmatter";
+import { PrimitiveType, type PrimitiveEntry, type CompletionCheckEntry } from "./types";
+import { parseFrontmatter, parseCompletionCheckFrontmatter } from "./frontmatter";
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -48,6 +48,23 @@ export async function discoverPrimitives(
   return Array.from(merged.values())
     .filter((e) => e.frontmatter.enabled)
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function discoverCompletionCheck(
+  projectDir: string,
+  workflowName: string,
+): Promise<CompletionCheckEntry | null> {
+  const filePath = join(projectDir, ".otto", "workflows", workflowName, "COMPLETION_CHECK.md");
+  const file = Bun.file(filePath);
+
+  if (!(await file.exists())) return null;
+
+  const content = await file.text();
+  const { frontmatter, body } = parseCompletionCheckFrontmatter(content);
+
+  if (!frontmatter.enabled) return null;
+
+  return { frontmatter, body, filePath };
 }
 
 async function scanDir(

@@ -2,7 +2,7 @@
 
 - [x] Remove `completable` field from `PrimitiveFrontmatter` interface and all parsing/defaults — file(s): `src/primitives/types.ts`, `src/primitives/frontmatter.ts`
 - [x] Remove `STOP_INSTRUCTION` constant, `completable` parameter from `resolveTemplate`, and add `{{ checks }}` inline placeholder support — file(s): `src/resolver.ts`
-- [ ] Remove `STOP_MARKER` constant and all `agentRequestedStop` handling from the engine — file(s): `src/constants.ts`, `src/engine.ts`
+- [x] Remove `STOP_MARKER` constant and all `agentRequestedStop` handling from the engine — file(s): `src/constants.ts`, `src/engine.ts`
 - [ ] Add `CompletionCheckEntry` interface and `parseCompletionCheckFrontmatter` — file(s): `src/primitives/types.ts`, `src/primitives/frontmatter.ts`
 - [ ] Add `discoverCompletionCheck` function — file(s): `src/primitives/discovery.ts`
 - [ ] Create `src/primitives/completionCheck.ts` with `runCompletionCheck` — file(s): `src/primitives/completionCheck.ts`

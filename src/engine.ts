@@ -12,7 +12,6 @@ import { runChecks } from "./primitives/checks";
 import { resolveTemplate } from "./resolver";
 import { runAgent } from "./agent";
 import { formatDuration } from "./output";
-import { STOP_MARKER } from "./constants";
 import { parseWorkflowFrontmatter } from "./primitives/frontmatter";
 
 /** Env var used to pass the shared relay directory path to child otto processes. */
@@ -221,11 +220,7 @@ export async function runLoop(
           lastIterationFailed = false;
         }
 
-        // Check if agent signalled completion
-        const agentRequestedStop = agentResult.resultText.includes(STOP_MARKER);
-
-        // Strip stop marker from displayed result text
-        const resultText = agentResult.resultText.replaceAll(STOP_MARKER, "").trim();
+        const resultText = agentResult.resultText.trim();
 
         // Emit ITERATION_COMPLETE
         emitter.emit({
@@ -254,16 +249,6 @@ export async function runLoop(
 
         // Stop on error if configured
         if (runConfig.stopOnError && lastIterationFailed) break;
-
-        // Stop if agent signalled task completion
-        if (agentRequestedStop) {
-          emitter.emit({
-            type: EventType.LOG_MESSAGE,
-            timestamp: Date.now(),
-            data: { level: "info", message: "Agent signalled task completion" },
-          });
-          break;
-        }
 
         // Discover and run checks
         const checkEntries = await discoverPrimitives(projectDir, runConfig.workflow, "checks");

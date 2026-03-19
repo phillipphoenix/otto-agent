@@ -9,7 +9,6 @@ export interface PrimitiveFrontmatter {
   command: string | null;
   timeout: number | null;
   description: string | null;
-  completable: boolean;
 }
 
 export interface WorkflowFrontmatter extends PrimitiveFrontmatter {

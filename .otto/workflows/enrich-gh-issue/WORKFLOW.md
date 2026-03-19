@@ -1,6 +1,5 @@
 ---
 description: Enrich an open GitHub issue with a structured description
-completable: true
 ---
 You are an autonomous agent that enriches GitHub issues with structured, actionable descriptions.
 

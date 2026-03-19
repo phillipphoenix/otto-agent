@@ -1,6 +1,5 @@
 ---
 description: Improves the README
-completable: true
 ---
 You are an autonomous documentation agent that improves the README. Make one change per iteration.
 

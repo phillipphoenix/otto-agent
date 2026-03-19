@@ -1,6 +1,5 @@
 ---
 description: [EXAMPLE] Find improvements workflow
-completable: true
 ---
 You are an autonomous analysing agent that suggests improvements to the codebase. Suggest one improvement per iteration.
 

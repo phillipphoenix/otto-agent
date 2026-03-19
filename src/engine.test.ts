@@ -16,7 +16,7 @@ const mockRunAgent = mock((_config: any, _prompt: string, _emitter?: any) =>
   }),
 );
 
-const mockRunCompletionCheck = mock(() => Promise.resolve(false));
+const mockRunCompletionCheck = mock(() => Promise.resolve({ completed: false }));
 const mockDiscoverCompletionCheck = mock(() => Promise.resolve(null));
 
 mock.module("./agent", () => ({ runAgent: mockRunAgent }));
@@ -318,7 +318,7 @@ describe("runLoop nested events via relay directory", () => {
 
     const fakeEntry = { frontmatter: { enabled: true }, content: "Is work done?", filePath: "/fake/COMPLETION_CHECK.md" };
     mockDiscoverCompletionCheck.mockImplementation(() => Promise.resolve(fakeEntry));
-    mockRunCompletionCheck.mockImplementation(() => Promise.resolve(true));
+    mockRunCompletionCheck.mockImplementation(() => Promise.resolve({ completed: true }));
 
     const emitter = createEmitter();
     const events: import("./events").Event[] = [];
@@ -332,7 +332,7 @@ describe("runLoop nested events via relay directory", () => {
 
     // Restore mocks
     mockDiscoverCompletionCheck.mockImplementation(() => Promise.resolve(null));
-    mockRunCompletionCheck.mockImplementation(() => Promise.resolve(false));
+    mockRunCompletionCheck.mockImplementation(() => Promise.resolve({ completed: false }));
   });
 });
 

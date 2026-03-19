@@ -265,14 +265,21 @@ export async function runLoop(
         if (completionCheckEntry) {
           const checkFailuresForCompletion =
             state.checkFailures.length > 0 ? state.checkFailures.join("\n\n") : undefined;
-          const isDone = await runCompletionCheck(
+          const result = await runCompletionCheck(
             completionCheckEntry,
             config.agent.command,
             contexts,
             instructions,
             checkFailuresForCompletion,
           );
-          if (isDone) break;
+          if (result.error) {
+            emitter.emit({
+              type: EventType.LOG_MESSAGE,
+              timestamp: Date.now(),
+              data: { level: "error", message: `Completion check error: ${result.error}` },
+            });
+          }
+          if (result.completed) break;
         }
 
         // Delay between iterations
